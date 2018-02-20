@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jan 18 19:21:28 2018
+##Created on Thu Jan 18 19:21:28 2018
 
-@author: Oskar & Cloobert
+##@author: Oskar & Cloobert
 """
 from bs4 import BeautifulSoup
 from datetime import datetime
@@ -11,8 +11,9 @@ import pandas as pd
 import numpy as np
 import requests
 import re
+import datetime
 
-# base url
+#base url
 url = 'https://www.flashback.org/'
 if url[len(url)-1] == '/':
         url = url[0:len(url)-1]
@@ -39,6 +40,8 @@ def getThread(html):
       threads_data['NumOfAnswers'] = re.search('(\d+) svar', str(html))[0]
   except TypeError:
       print('error')
+  except AttributeError:
+      print('AttributeError ',serc)
   return threads_data
 
 
@@ -49,14 +52,21 @@ def get_posts(page,url):
 #reads one post and extracts the data and returns a dic
 def get_post_data(post,url):
     post_data={}
-    post_data['Message'] = post.select('div.post_message')[0].get_text().strip().replace('\n',' ').replace('  ',' ').replace('\t',' ')
-    post_data['PostID'] = re.search('[0-9]+',post.select('div.post_message')[0]['id'])[0]
-    post_data['Date'] = re.search('[0-9]{4}-[0-9]{2}-[0-9]{2}',post.select('div.post-heading')[0].get_text())[0]
-    post_data['Time'] = re.search('[0-9]{2}:[0-9]{2}',post.select('div.post-heading')[0].get_text())[0]
-    post_data['AuthorID'] = re.search('u[0-9]+',post.find('a',class_="post-user-username dropdown-toggle")['href'])[0]
-    post_data['ThreadID'] = re.search('t[0-9]+',url)[0]
-    return post_data
+    try:
+        post_data['Message'] = post.select('div.post_message')[0].get_text().strip().replace('\n',' ').replace('  ',' ').replace('\t',' ')
+        post_data['PostID'] = re.search('[0-9]+',post.select('div.post_message')[0]['id'])[0]
+        post_data['Time'] = re.search('[0-9]{2}:[0-9]{2}',post.select('div.post-heading')[0].get_text())[0]
+        post_data['Date'] = re.search('[0-9]{4}-[0-9]{2}-[0-9]{2}',post.select('div.post-heading')[0].get_text())[0]
+        post_data['ThreadID'] = re.search('t[0-9]+',url)[0]
+        post_data['AuthorID'] = re.search('u[0-9]+',post.find('a',class_="post-user-username dropdown-toggle")['href'])[0]
 
+    except TypeError:
+        print(f'TypeError on {url}')
+
+    except AttributeError:
+        print(f'AttributeError on {url}')
+
+    return post_data
 
 #Reads all posts in one page and returns a list containing a dictionariy for each post
 def read_posts(posts,url):
@@ -65,7 +75,6 @@ def read_posts(posts,url):
         lst.append(dict(get_post_data(post,url)))
     return lst
 
-
 #Gets the number of pages
 def get_post_pages(url):
     if get_html(url).find('span', class_='input-page-jump'):
@@ -73,12 +82,42 @@ def get_post_pages(url):
     else:
         return int(1)
 
+def save_posts(threadUrl):
+    postPages = get_post_pages(threadUrl)
+    lst = []
+
+    for i in range(1, postPages+1) :
+        new_url = threadUrl + 'p' + str(i)
+        lst=lst+read_posts(get_posts(get_html(new_url),new_url),new_url)
+        if i%100 == 0:
+            print(f'{i} of {postPages} in thread {threadUrl} pages read')
+
+    filename = f'{str(datetime.datetime.today().date())}_{threadUrl}.csv'
+    apa = pd.DataFrame(lst)
+    apa.to_csv(f'~/Users/cloobert/BI/Python/DrugsOnFlashback/TextAnalysisOnFlashback/{filename}')
+    print(f'Saved file {filename}')
+    return apa
+
+url = 'https://www.flashback.org/t2266379'
+
+for p in threadIDs:
+    init_url = url + '/' + p
+    max_pages=get_post_pages(init_url)
+    print(f'Max Pages in {init_url} is {max_pages}')
+    if len(lst)-counter > 25:
+        print(f'{len(lst)} posts saved')
+        counter = len(lst)
+
+    save_posts(threadUrl)
+
+
 # num of pages declared by looking in the source code at: view-source:https://www.flashback.org/f13
-pageNum = np.arange(365,423)
+pageNum = np.arange(1,423)
 threadsLst = []
 
 for i in pageNum:
   UrlToRequest = str(url_threads + 'p' + str(i))
+  print(UrlToRequest)
   RequestedPage = get_html(UrlToRequest)
   htmlFiltered = RequestedPage.select('#threadslist > tbody > tr')
 
@@ -92,12 +131,13 @@ threads = pd.DataFrame.from_dict(threadsLst)
 
 #threadIDs = list(threads['ThreadID'])
 
-threadIDs = list(threads['ThreadID'][0:20])
+threadIDs = list(threads['ThreadID'])
 # fetch all posts for all threads
 lst=[]
 print('Booting up...')
 counter = 0
-
+import datetime
+#print(str(datetime.datetime.today().date()))
 for p in threadIDs:
     init_url = url + '/' + p
     max_pages=get_post_pages(init_url)
@@ -109,7 +149,21 @@ for p in threadIDs:
     for i in range(1,max_pages+1):
         new_url=init_url + 'p' + str(i)
         lst=lst+read_posts(get_posts(get_html(new_url),new_url),new_url)
-        if i%5 == 0:
-            print(f'{i} of {max_pages} in thread {p} pages read')
+        #if i%5 == 0:
+            #print(f'{i} of {max_pages} in thread {p} pages read')
+    filename = f'{str(datetime.datetime.today().date())}_{p}.csv'
+    pd.DataFrame(lst).to_csv(f'~\Documents\PythonPath\TextAnalysisOnFlashback\SavedData\{filename}')
+    print(f'Saved file {filename}')
+    lst=[]
 
-posts=pd.DataFrame(lst)
+#posts=pd.DataFrame(lst)
+
+
+#
+#
+# threads.to_csv('~\Documents\PythonPath\TextAnalysisOnFlashback\Treads.csv')
+# pwd()
+#
+# threads = pd.DataFrame(pd.read_csv('~\Documents\PythonPath\TextAnalysisOnFlashback\Treads2.csv',sep = ';',encoding='cp1252',escapechar='"',quoting=3))
+# type(threads)
+# threadIDs
