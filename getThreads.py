@@ -1,0 +1,113 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Jan 18 19:21:28 2018
+
+@author: Oskar & Cloobert
+"""
+from bs4 import BeautifulSoup
+from datetime import datetime
+import pandas as pd
+import numpy as np
+import requests
+import re
+
+# base url
+url = 'https://www.flashback.org/'
+
+# threads url
+url_threads = url + 'f13'
+
+# creating empty dict for threads
+threads = {}
+
+
+def get_html(url):
+    page = requests.get(url)
+    return BeautifulSoup(page.content, 'html.parser')
+
+def getThread(html):
+  threads_data = {}
+  threads_data['ThreadIds'] = re.search('t(\d+)',html.find('a',class_="hover-toggle thread-goto-lastpost visible-xs-inline-block")['href'])[0]
+  serc = 'thread_title_' + threads_data['ThreadIds'][1:]
+  threads_data['ThreadTitles'] = html.find('a', id=serc).text
+  threads_data['CreatorIds'] = re.search('u(\d+)', str(html))[0]
+  threads_data['NumOfViews'] = re.search('(\d+) visningar', str(html))[0]
+  threads_data['NumOfAnswers'] = re.search('(\d+) svar', str(html))[0]
+  
+  return threads_data
+
+
+#reads a html page and returns a list with all posts
+def get_posts(page,url):
+    return page.select("div.post")
+
+#reads one post and extracts the data and returns a dic
+def get_post_data(post,url):
+    post_data={}
+    post_data['Message'] = post.select('div.post_message')[0].get_text().strip().replace('\n',' ').replace('  ',' ').replace('\t',' ')
+    post_data['PostID'] = re.search('[0-9]+',post.select('div.post_message')[0]['id'])[0]
+    post_data['Date'] = re.search('[0-9]{4}-[0-9]{2}-[0-9]{2}',post.select('div.post-heading')[0].get_text())[0]
+    post_data['Time'] = re.search('[0-9]{2}:[0-9]{2}',post.select('div.post-heading')[0].get_text())[0]
+    post_data['AuthorID'] = re.search('u[0-9]+',post.find('a',class_="post-user-username dropdown-toggle")['href'])[0]
+    post_data['ThreadID'] = re.search('t[0-9]+',url)[0]
+    return post_data
+
+
+#Reads all posts in one page and returns a list containing a dictionariy for each post
+def read_posts(posts,url):
+    lst=[]
+    for post in posts:
+        lst.append(dict(get_post_data(post,url)))
+    return lst
+
+
+#Gets the number of pages
+def get_post_pages(url):
+    try:
+        get_html(url).find('span', class_='input-page-jump'):
+            return int(get_html(url).find('span', class_='input-page-jump')['data-total-pages'])
+    except:
+        return int(1)
+
+# num of pages declared by looking in the source code at: view-source:https://www.flashback.org/f13
+pageNum = np.arange(1,423)
+threadsLst = []
+
+for i in pageNum:  
+  UrlToRequest = str(url_threads + 'p' + str(pageNum[i]))
+  RequestedPage = get_html(UrlToRequest)
+  htmlFiltered = RequestedPage.select('#threadslist > tbody > tr')
+
+  for j in range(1, len(htmlFiltered)):
+    threadsLst.append(getThread(htmlFiltered[j]))
+    if j%25 == 0:
+      print(f'{j} of {len(threadsLst)} threads collected')
+      
+
+threads = pd.DataFrame.from_dict(threadsLst)
+threads 
+
+threads.to_csv('threads.csv', sep=',', encoding='utf-8', index = False)
+
+threads = pd.DataFrame.from_csv('~/BI/Python/DrugsOnFlashback/threads.csv')
+threadIDs = list(threads['ThreadIds'])
+
+
+# fetch all posts for all threads
+lst=[]
+print('Booting up...')
+for p in range(0, len(threadIDs)):
+#for p in range(0, 2):    
+    init_url = url + threadIDs[p]
+    max_pages=get_post_pages(init_url)
+    
+    for i in range(1,max_pages+1):
+        new_url=init_url + 'p' + str(i)
+        lst=lst+read_posts(get_posts(get_html(new_url),new_url),new_url)
+        if i%10 == 0:
+            print(f'{i} of {max_pages} pages read')
+
+posts=pd.DataFrame(lst)
+posts.to_csv('posts.csv', sep=',', encoding='utf-8', index = False)
+
