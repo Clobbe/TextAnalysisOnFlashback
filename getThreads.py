@@ -107,7 +107,7 @@ def Main():
 
     #Ange hur många sidor som skall crawlas
     #pageNum = np.arange(1,423)
-    pageNum = np.arange(110,112)
+    pageNum = np.arange(110,111)
     threadsLst = []
     # creating empty dict for threads
     threadsDic = {}
@@ -138,10 +138,12 @@ def Main():
                 #print(f'{i} of {max_pages} in thread {p} pages read')
         threadsDic[ThreadID]["Posts"] = postsDic
 
-        print(threadsDic)
+        #print(threadsDic)
 
 
 Main()
+
+print(np.arange(110,111))
 
 turl = 'https://www.flashback.org/f13'
 page =  get_html(turl)
