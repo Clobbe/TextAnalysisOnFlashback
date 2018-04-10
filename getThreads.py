@@ -154,8 +154,8 @@ def Main():
       RequestedPage = get_html(UrlToRequest)
       htmlFiltered = RequestedPage.select('#threadslist > tbody > tr')
 
-      postLst.append(get_thread_posts(UrlToRequest))
-      threadsLst.append(getThread())
+    #  postLst.append(get_thread_posts(UrlToRequest))
+      threadsLst.append(getThread(htmlFiltered))
       print(UrlToRequest)
 
       for j in range(1, len(htmlFiltered)):
