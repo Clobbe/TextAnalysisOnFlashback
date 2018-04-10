@@ -45,11 +45,14 @@ def get_posts(html,url):
 def get_post_data(post,url):
     post_data={}
     try:
-        post_data['threadID'] = re.search('t\d+',url)
+        post_data['threadID'] = re.search('t\d+',url)[0]
         post_data['PostID'] = re.search('[0-9]+',post.select('div.post_message')[0]['id'])[0]
         post_data['Message'] = post.select('div.post_message')[0].get_text().strip().replace('\n',' ').replace('  ',' ').replace('\t',' ')
         post_data['Time'] = re.search('[0-9]{2}:[0-9]{2}',post.select('div.post-heading')[0].get_text())[0]
-        post_data['Date'] = re.search('(\w+|[0-9]{4}-[0-9]{2}-[0-9]{2})',post.select('div.post-heading')[0].get_text())[0]
+        date=str(re.search('(\w+|[0-9]{4}-[0-9]{2}-[0-9]{2})',post.select('div.post-heading')[0].get_text())[0])
+        if date !='Idag':
+            post_data['Date'] = date
+        else: post_data['Date'] = str(datetime.date.today())
         post_data['AuthorID'] = re.search('u[0-9]+',post.find('a',class_="post-user-username dropdown-toggle")['href'])[0]
         return post_data
     except TypeError:
