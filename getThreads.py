@@ -45,6 +45,7 @@ def get_posts(html,url):
 def get_post_data(post,url):
     post_data={}
     try:
+        post_data['threadID'] = re.search('t\d+',url)
         post_data['PostID'] = re.search('[0-9]+',post.select('div.post_message')[0]['id'])[0]
         post_data['Message'] = post.select('div.post_message')[0].get_text().strip().replace('\n',' ').replace('  ',' ').replace('\t',' ')
         post_data['Time'] = re.search('[0-9]{2}:[0-9]{2}',post.select('div.post-heading')[0].get_text())[0]
