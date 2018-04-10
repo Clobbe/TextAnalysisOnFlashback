@@ -12,7 +12,7 @@ import numpy as np
 import requests
 import re
 import datetime
-import pymongo
+
 
 
 def get_html(url):
@@ -22,14 +22,14 @@ def get_html(url):
 def getThread(html):
   threads_data = {}
   try:
-      #threads_data['ThreadID'] = re.search('t(\d+)',html.find('a',class_="hover-toggle thread-goto-lastpost visible-xs-inline-block")['href'])[0]
-      ThreadID = re.search('t(\d+)',html.find('a',class_="hover-toggle thread-goto-lastpost visible-xs-inline-block")['href'])[0]
+      threads_data['ThreadID'] = re.search('t(\d+)',html.find('a',class_="hover-toggle thread-goto-lastpost visible-xs-inline-block")['href'])[0]
+      #ThreadID = re.search('t(\d+)',html.find('a',class_="hover-toggle thread-goto-lastpost visible-xs-inline-block")['href'])[0]
       serc = 'thread_title_' + ThreadID
       threads_data['ThreadTitles'] = html.find('a', id=serc).text
       threads_data['CreatorID'] = re.search('u(\d+)', str(html))[0]
       threads_data['NumOfViews'] = re.search('(\d+) visningar', str(html))[0]
       threads_data['NumOfAnswers'] = re.search('(\d+) svar', str(html))[0]
-      return threads_data,ThreadID
+      return threads_data
   except TypeError:
       print('error')
   except AttributeError:
@@ -108,62 +108,17 @@ def release_fart():
 
 
 
-<<<<<<< HEAD
-#def Main():
-#Hämta trådar --> Skriv i dict
-url = 'https://www.flashback.org/'
-if url[len(url)-1] == '/':
-        url = url[0:len(url)-1]
-# threads url
-url_threads = url + '/f13'
-
-
-#Hämta data för varje tråd --> Skriv i dict
-
-#Ange hur många sidor som skall crawlas
-#pageNum = np.arange(1,423)
-pageNum = np.arange(110,111)
-threadsLst = []
-# creating empty dict for threads
-threadsDic = {}
-for i in pageNum:
-  UrlToRequest = str(url_threads + 'p' + str(i))
-  print(UrlToRequest)
-  RequestedPage = get_html(UrlToRequest)
-  htmlFiltered = RequestedPage.select('#threadslist > tbody > tr')
-  for j in range(1, len(htmlFiltered)):
-    threadData,ThreadID = getThread(htmlFiltered[j])
-    threadsDic[ThreadID] = threadData
-    print(threadsDic)
-
-    #Explore the Posts in ThreadID
-    init_url = url + '/' + ThreadID
-    max_pages=get_post_pages(init_url)
-    print(f'Max Pages in {init_url} is {max_pages}')
-    #if len(lst)-counter > 25:
-        #print(f'{len(lst)} posts saved')
-        #counter = len(lst)
-#for p in range(0, 2):
-    postsDic = {}
-    for i in range(1,max_pages+1):
-        new_url=init_url + 'p' + str(i)
-        postsDic[ThreadID]={**postsDic,**read_posts(get_posts(get_html(new_url),new_url),new_url)}
-        #lst=lst+read_posts(get_posts(get_html(new_url),new_url),new_url)
-        #if i%5 == 0:
-            #print(f'{i} of {max_pages} in thread {p} pages read')
-    threadsDic[ThreadID]["Posts"] = postsDic
-
     #print(threadsDic)
 
 
 
 ###TESTING, på varje sida i varje tråd
-thread_url ='https://www.flashback.org/t2933081'
-Posts = get_posts(get_html(thread_url),thread_url)
-Post_data = read_posts(Posts, thread_url)
-#a=get_post_data(Posts[0],thread_url)
-posts= get_thread_posts(thread_url)
-posts
+# thread_url ='https://www.flashback.org/t2933081'
+# Posts = get_posts(get_html(thread_url),thread_url)
+# Post_data = read_posts(Posts, thread_url)
+# #a=get_post_data(Posts[0],thread_url)
+# posts= get_thread_posts(thread_url)
+# posts
 
 ##END_TESTING####
 #
@@ -192,30 +147,29 @@ def Main():
     #pageNum = np.arange(1,423)
     pageNum = np.arange(110,111)
     threadsLst = []
+    postLst = []
     # creating empty dict for threads
-    threadsDic = {}
     for i in pageNum:
       UrlToRequest = str(url_threads + 'p' + str(i))
-      print(UrlToRequest)
       RequestedPage = get_html(UrlToRequest)
       htmlFiltered = RequestedPage.select('#threadslist > tbody > tr')
-      for j in range(1, len(htmlFiltered)):
-        threadData,ThreadID = getThread(htmlFiltered[j])
-        threadsDic[ThreadID] = threadData
-        #print(threadsDic)
 
+      postLst.append(get_thread_posts(UrlToRequest))
+      threadsLst.append(getThread())
+      print(UrlToRequest)
+
+      for j in range(1, len(htmlFiltered)):
+        threadData = getThread(htmlFiltered[j])
         #Explore the Posts in ThreadID
         init_url = url + '/' + ThreadID
-        max_pages=get_post_pages(init_url)
-        #print(f'Max Pages in {init_url} is {max_pages}')
-        #if len(lst)-counter > 25:
-            #print(f'{len(lst)} posts saved')
-            #counter = len(lst)
-    #for p in range(0, 2):
-        postsDic = {}
+        postLst.append(get_post_pages(new_url))
+    #    max_pages=
+#Explore all threads
+
         for i in range(1,max_pages+1):
             new_url=init_url + 'p' + str(i)
-            postsDic[ThreadID]={**postsDic,**read_posts(get_posts(get_html(new_url),new_url),new_url)}
+
+            #postsDic[ThreadID]={**postsDic,**read_posts(get_posts(get_html(new_url),new_url),new_url)}
             #lst=lst+read_posts(get_posts(get_html(new_url),new_url),new_url)
             #if i%5 == 0:
                 #print(f'{i} of {max_pages} in thread {p} pages read')
