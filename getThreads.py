@@ -145,7 +145,7 @@ def Main():
 
     #Ange hur många sidor som skall crawlas
     #pageNum = np.arange(1,423)
-    pageNum = np.arange(110,111)
+    pageNum = np.arange(1,2)
     threadsLst = []
     postLst = []
     # creating empty dict for threads
@@ -174,7 +174,7 @@ def Main():
             #if i%5 == 0:
                 #print(f'{i} of {max_pages} in thread {p} pages read')
         threadsDic[ThreadID]["Posts"] = postsDic
-
+        print(postLst,threadsLst)
         #print(threadsDic)
 
 Main()
