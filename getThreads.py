@@ -12,8 +12,7 @@ import numpy as np
 import requests
 import re
 import datetime
-
-
+import pymongo
 
 
 def get_html(url):
@@ -74,24 +73,37 @@ def get_post_pages(url):
     else:
         return int(1)
 
-def save_posts(threadUrl):
+def get_thread_posts(threadUrl):
     postPages = get_post_pages(threadUrl)
-    lst = []
+    posts = {}
 
     for i in range(1, postPages+1) :
         new_url = threadUrl + 'p' + str(i)
-        lst=lst+read_posts(get_posts(get_html(new_url),new_url),new_url)
+        posts = dict(**posts,read_posts(get_posts(get_html(new_url),new_url),new_url)
         if i%100 == 0:
             print(f'{i} of {postPages} in thread {threadUrl} pages read')
 
-    filename = f'{str(datetime.datetime.today().date())}_{threadUrl}.csv'
-    apa = pd.DataFrame(lst)
-    apa.to_csv(f'~/{filename}')
-    print(f'Saved file {filename}')
+    apa
     return apa
 
+def put_in_cage(dict, collectionName):
+
+    client = pymongo.MongoClient('mongodb://< ip-adress >:< port >/')
+    db = client.threads_database
+    collection = db.create_collection(collectionName)
+    result = collection.posts.insert_many(dict)
+
+    check = result.count() % len(dict)
 
 
+
+    return "det gick bra " eller "det gick jättedåligt"
+
+def release_fart():
+
+
+
+<<<<<<< HEAD
 #def Main():
 #Hämta trådar --> Skriv i dict
 url = 'https://www.flashback.org/'
@@ -159,6 +171,64 @@ Post_data
 # threadID = re.search('t(\d+)',page.find('a',class_="hover-toggle thread-goto-lastpost visible-xs-inline-block")['href'])[0]
 #
 #
+=======
+def Main():
+    #Hämta trådar --> Skriv i dict
+    url = 'https://www.flashback.org/'
+    if url[len(url)-1] == '/':
+            url = url[0:len(url)-1]
+    # threads url
+    url_threads = url + '/f13'
+
+
+    #Hämta data för varje tråd --> Skriv i dict
+
+    #Ange hur många sidor som skall crawlas
+    #pageNum = np.arange(1,423)
+    pageNum = np.arange(110,111)
+    threadsLst = []
+    # creating empty dict for threads
+    threadsDic = {}
+    for i in pageNum:
+      UrlToRequest = str(url_threads + 'p' + str(i))
+      print(UrlToRequest)
+      RequestedPage = get_html(UrlToRequest)
+      htmlFiltered = RequestedPage.select('#threadslist > tbody > tr')
+      for j in range(1, len(htmlFiltered)):
+        threadData,ThreadID = getThread(htmlFiltered[j])
+        threadsDic[ThreadID] = threadData
+        #print(threadsDic)
+
+        #Explore the Posts in ThreadID
+        init_url = url + '/' + ThreadID
+        max_pages=get_post_pages(init_url)
+        #print(f'Max Pages in {init_url} is {max_pages}')
+        #if len(lst)-counter > 25:
+            #print(f'{len(lst)} posts saved')
+            #counter = len(lst)
+    #for p in range(0, 2):
+        postsDic = {}
+        for i in range(1,max_pages+1):
+            new_url=init_url + 'p' + str(i)
+            postsDic[ThreadID]={**postsDic,**read_posts(get_posts(get_html(new_url),new_url),new_url)}
+            #lst=lst+read_posts(get_posts(get_html(new_url),new_url),new_url)
+            #if i%5 == 0:
+                #print(f'{i} of {max_pages} in thread {p} pages read')
+        threadsDic[ThreadID]["Posts"] = postsDic
+
+        #print(threadsDic)
+
+Main()
+
+# print(np.arange(110,111))
+#
+# turl = 'https://www.flashback.org/f13'
+# page =  get_html(turl)
+# threads = getThread(page)
+# threadID = re.search('t(\d+)',page.find('a',class_="hover-toggle thread-goto-lastpost visible-xs-inline-block")['href'])[0]
+#
+#
+>>>>>>> 590464f6441a48bced19ec3c27111438872113b0
 # print(threadID)
 #
 # posts=get_posts(page,turl)
