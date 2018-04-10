@@ -49,7 +49,7 @@ def get_post_data(post,url):
         post_data['PostID'] = re.search('[0-9]+',post.select('div.post_message')[0]['id'])[0]
         post_data['Message'] = post.select('div.post_message')[0].get_text().strip().replace('\n',' ').replace('  ',' ').replace('\t',' ')
         post_data['Time'] = re.search('[0-9]{2}:[0-9]{2}',post.select('div.post-heading')[0].get_text())[0]
-        date=str(re.search('(\w+|[0-9]{4}-[0-9]{2}-[0-9]{2})',post.select('div.post-heading')[0].get_text())[0])
+        date=str(re.search('([0-9]{4}-[0-9]{2}-[0-9]{2}|\w+)',post.select('div.post-heading')[0].get_text())[0])
         if date !='Idag':
             post_data['Date'] = date
         else: post_data['Date'] = str(datetime.date.today())
@@ -79,16 +79,17 @@ def get_post_pages(url):
 
 def get_thread_posts(threadUrl):
     postPages = get_post_pages(threadUrl)
-    posts = {}
+    posts = []
 
     for i in range(1, postPages+1) :
         new_url = threadUrl + 'p' + str(i)
-        posts = dict(**posts,read_posts(get_posts(get_html(new_url),new_url),new_url)
+        posts.extend(read_posts(get_posts(get_html(new_url),new_url),new_url))
+        #posts = dict(**posts,read_posts(get_posts(get_html(new_url),new_url),new_url))
         if i%100 == 0:
             print(f'{i} of {postPages} in thread {threadUrl} pages read')
 
-    apa
-    return apa
+
+    return posts
 
 def put_in_cage(dict, collectionName):
 
@@ -161,7 +162,8 @@ thread_url ='https://www.flashback.org/t2933081'
 Posts = get_posts(get_html(thread_url),thread_url)
 Post_data = read_posts(Posts, thread_url)
 #a=get_post_data(Posts[0],thread_url)
-Post_data
+posts= get_thread_posts(thread_url)
+posts
 
 ##END_TESTING####
 #
@@ -174,8 +176,7 @@ Post_data
 # threads = getThread(page)
 # threadID = re.search('t(\d+)',page.find('a',class_="hover-toggle thread-goto-lastpost visible-xs-inline-block")['href'])[0]
 #
-#
-=======
+#4=======
 def Main():
     #Hämta trådar --> Skriv i dict
     url = 'https://www.flashback.org/'
@@ -343,3 +344,9 @@ Main()
 # read_posts(get_posts(get_html(new_url),new_url),new_url)
 #
 # print(post_data)
+
+a=[1]
+b=[1,2,3]
+c=[1,2,3]
+a.extend(b)
+a
