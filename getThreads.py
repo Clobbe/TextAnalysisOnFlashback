@@ -12,8 +12,7 @@ import numpy as np
 import requests
 import re
 import datetime
-
-
+import psycopg2
 
 def get_html(url):
     page = requests.get(url)
@@ -91,16 +90,13 @@ def get_thread_posts(threadUrl):
 
     return posts
 
-def put_in_cage(dict, collectionName):
-
+def post_to_db(dict, table):
+    cur.
     client = pymongo.MongoClient('mongodb://< ip-adress >:< port >/')
     db = client.threads_database
     collection = db.create_collection(collectionName)
     result = collection.posts.insert_many(dict)
-
     check = result.count() % len(dict)
-
-
 
     return "det gick bra " eller "det gick jättedåligt"
 
@@ -133,6 +129,15 @@ def release_fart():
 #
 #4=======
 def Main():
+    # Öppna conn mot #DB
+    db = os.environ["dbname"]
+    usr = os.environ["usr"]
+    pwd = os.environ["pwd"]
+    hst = os.environ["hst"]
+    conn = psycopg2.connect(f"dbname={db} user={usr} password={pwd} host={hst}")
+    cur = conn.cursor()
+
+
     #Hämta trådar --> Skriv i dict
     url = 'https://www.flashback.org/'
     if url[len(url)-1] == '/':
