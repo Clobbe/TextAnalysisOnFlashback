@@ -90,15 +90,12 @@ def get_thread_posts(threadUrl):
 
     return posts
 
-def post_to_db(dict, table):
-    cur.
-    client = pymongo.MongoClient('mongodb://< ip-adress >:< port >/')
-    db = client.threads_database
-    collection = db.create_collection(collectionName)
-    result = collection.posts.insert_many(dict)
-    check = result.count() % len(dict)
+def post_to_db(dict, str(table)):
+    q = f'INSERT INTO {table}({dict.keys()}) VALUES ({dict.values()})'
+    cur.executemany(q, dict)
+    conn.commit()
 
-    return "det gick bra " eller "det gick jättedåligt"
+    return f'posting to database done!'
 
 def release_fart():
 
@@ -169,7 +166,7 @@ def Main():
         init_url = url + '/' + ThreadID
         postLst.append(get_post_pages(new_url))
     #    max_pages=
-#Explore all threads
+    #Explore all threads
 
         for i in range(1,max_pages+1):
             new_url=init_url + 'p' + str(i)
@@ -181,6 +178,11 @@ def Main():
         threadsDic[ThreadID]["Posts"] = postsDic
         print(postLst,threadsLst)
         #print(threadsDic)
+
+
+        # Close communication with the database
+         cur.close()
+         conn.close()
 
 Main()
 
